@@ -13,6 +13,9 @@ var db *sql.DB
 
 func report() (results [][]string) {
 	myEnv, err := godotenv.Read()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	connString := myEnv["CONN_STRING"]
 	queryString := "SELECT * FROM spree_states order by name asc"
