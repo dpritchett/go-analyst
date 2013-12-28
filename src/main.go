@@ -2,28 +2,27 @@ package main
 
 import (
 	"bitbucket.org/dpritchett/analyst"
+	"database/sql"
+	"encoding/json"
 	"github.com/hoisie/web"
-    "github.com/joho/godotenv"
-    "encoding/json"
+	"github.com/joho/godotenv"
 	"log"
-    "database/sql"
 )
 
 var db *sql.DB
 
 func report() (results [][]string) {
-    myEnv, err := godotenv.Read()
+	myEnv, err := godotenv.Read()
 
 	connString := myEnv["CONN_STRING"]
 	queryString := "SELECT * FROM spree_states order by name asc"
 
-    if db == nil {
-      db, err = analyst.Connect(connString)
-      if err != nil {
-          log.Fatal(err)
-      }
-    }
-
+	if db == nil {
+		db, err = analyst.Connect(connString)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 
 	columns, rows, err := analyst.Query(db, queryString)
 
@@ -41,23 +40,23 @@ func report() (results [][]string) {
 }
 
 func helloSQL(ctx *web.Context) (body []byte, err error) {
-  ctx.ContentType("json")
-  body, err = json.Marshal(report())
-  return
+	ctx.ContentType("json")
+	body, err = json.Marshal(report())
+	return
 }
 
 func helloWorld(ctx *web.Context) (body []byte, err error) {
-  body = []byte{'h', 'i'}
-  return
+	body = []byte{'h', 'i'}
+	return
 }
 
 func serve() {
-  web.Get("/sql", helloSQL)
-  web.Get("/", helloWorld)
-  web.Run("0.0.0.0:9999")
+	web.Get("/sql", helloSQL)
+	web.Get("/", helloWorld)
+	web.Run("0.0.0.0:9999")
 }
 
 func main() {
-  //analyst.Hello()
-  serve()
+	//analyst.Hello()
+	serve()
 }
