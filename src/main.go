@@ -1,65 +1,92 @@
 package main
 
 import (
-	"bitbucket.org/dpritchett/analyst"
-	"database/sql"
-	"encoding/json"
-	"github.com/hoisie/web"
-	"github.com/joho/godotenv"
-	"log"
+  "bitbucket.org/dpritchett/analyst/pg"
+  "bitbucket.org/dpritchett/analyst/sqlite"
+  "encoding/json"
+  "github.com/hoisie/web"
+  "github.com/joho/godotenv"
+  "log"
 )
 
-var db *sql.DB
+func hisqlite() (results [][]string) {
+
+  queryString := "SELECT * FROM Queries"
+
+  db, err := sqlite.Connect("db/development.sqlite3.db")
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  columns, rows, err := sqlite.Query(db, queryString)
+
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  results = append(results, columns)
+
+  for _, row := range rows {
+    results = append(results, row)
+  }
+
+  return
+}
 
 func report() (results [][]string) {
-	myEnv, err := godotenv.Read()
-	if err != nil {
-		log.Fatal(err)
-	}
+  myEnv, err := godotenv.Read()
+  if err != nil {
+    log.Fatal(err)
+  }
 
-	connString := myEnv["CONN_STRING"]
-	queryString := "SELECT * FROM spree_states order by name asc"
+  connString := myEnv["CONN_STRING"]
+  queryString := "SELECT * FROM spree_states order by name asc"
 
-	if db == nil {
-		db, err = analyst.Connect(connString)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
+  db, err := pg.Connect(connString)
+  if err != nil {
+    log.Fatal(err)
+  }
 
-	columns, rows, err := analyst.Query(db, queryString)
+  columns, rows, err := pg.Query(db, queryString)
 
-	if err != nil {
-		log.Fatal(err)
-	}
+  if err != nil {
+    log.Fatal(err)
+  }
 
-	results = append(results, columns)
+  results = append(results, columns)
 
-	for _, row := range rows {
-		results = append(results, row)
-	}
+  for _, row := range rows {
+    results = append(results, row)
+  }
 
-	return
+  return
 }
 
 func helloSQL(ctx *web.Context) (body []byte, err error) {
-	ctx.ContentType("json")
-	body, err = json.Marshal(report())
-	return
+  ctx.ContentType("json")
+  body, err = json.Marshal(report())
+  return
+}
+
+func helloSQLite(ctx *web.Context) (body []byte, err error) {
+  ctx.ContentType("json")
+  body, err = json.Marshal(hisqlite())
+  return
 }
 
 func helloWorld(ctx *web.Context) (body []byte, err error) {
-	body = []byte{'h', 'i'}
-	return
+  body = []byte{'h', 'i'}
+  return
 }
 
 func serve() {
-	web.Get("/sql", helloSQL)
-	web.Get("/", helloWorld)
-	web.Run("0.0.0.0:9999")
+  web.Get("/sql", helloSQL)
+  web.Get("/", helloWorld)
+  web.Get("/lite", helloSQLite)
+  web.Run("0.0.0.0:9999")
 }
 
 func main() {
-	//analyst.Hello()
-	serve()
+  //analyst.Hello()
+  serve()
 }

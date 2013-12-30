@@ -1,4 +1,4 @@
-package analyst
+package pg
 
 import (
 	"database/sql"
