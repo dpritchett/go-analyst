@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bitbucket.org/dpritchett/analyst/pg"
-	"bitbucket.org/dpritchett/analyst/sqlite"
+	"github.com/dpritchett/go-analyst/pg"
+	"github.com/dpritchett/go-analyst/sqlite"
 	"encoding/json"
 	"github.com/hoisie/web"
 	"github.com/joho/godotenv"

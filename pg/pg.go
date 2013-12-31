@@ -6,7 +6,7 @@ import (
 )
 
 func Connect(connString string) (db *sql.DB, err error) {
-	db, err = sql.Open("postgres", "user=tubedepot dbname=tubedepot_spree2_development host=localhost password=tubedepot")
+	db, err = sql.Open("postgres", connString)
 	return
 }
 
