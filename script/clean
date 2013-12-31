@@ -1,3 +1,0 @@
-#!/usr/bin/env sh
-
-find . | grep "\.go$" | xargs -n1 go fmt

@@ -1,9 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/dpritchett/go-analyst/pg"
 	"github.com/dpritchett/go-analyst/sqlite"
-	"encoding/json"
 	"github.com/hoisie/web"
 	"github.com/joho/godotenv"
 	"log"
