@@ -2,8 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/dpritchett/go-analyst/pg"
-	"github.com/dpritchett/go-analyst/sqlite"
+	"github.com/dpritchett/go-analyst/connection"
 	"github.com/hoisie/web"
 	"github.com/joho/godotenv"
 	"log"
@@ -13,12 +12,12 @@ func hisqlite() (results [][]string) {
 
 	queryString := "SELECT * FROM Queries"
 
-	db, err := sqlite.Connect("db/development.sqlite3.db")
+	db, err := connection.Connect("sqlite3", "db/development.sqlite3.db")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	columns, rows, err := sqlite.Query(db, queryString)
+	columns, rows, err := connection.Query(db, queryString)
 
 	if err != nil {
 		log.Fatal(err)
@@ -33,24 +32,30 @@ func hisqlite() (results [][]string) {
 	return
 }
 
-func report() (results [][]string) {
+func report() (results [][]string, err error) {
+	queryString := "SELECT * FROM spree_states order by name asc"
+
+	log.Printf("Executing [%s]", queryString)
+	return execQuery(queryString)
+}
+
+func execQuery(queryString string) (results [][]string, err error) {
 	myEnv, err := godotenv.Read()
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 
 	connString := myEnv["CONN_STRING"]
-	queryString := "SELECT * FROM spree_states order by name asc"
 
-	db, err := pg.Connect(connString)
+	db, err := connection.Connect("postgres", connString)
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 
-	columns, rows, err := pg.Query(db, queryString)
+	columns, rows, err := connection.Query(db, queryString)
 
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 
 	results = append(results, columns)
@@ -59,12 +64,6 @@ func report() (results [][]string) {
 		results = append(results, row)
 	}
 
-	return
-}
-
-func helloSQL(ctx *web.Context) (body []byte, err error) {
-	ctx.ContentType("json")
-	body, err = json.Marshal(report())
 	return
 }
 
@@ -74,13 +73,28 @@ func helloSQLite(ctx *web.Context) (body []byte, err error) {
 	return
 }
 
+func handleQuery(ctx *web.Context) (body []byte, err error) {
+	ctx.ContentType("json")
+	log.Print(ctx.Params)
+
+	results, err := execQuery(ctx.Params["query"])
+
+	if err != nil {
+		log.Printf("Error: %v", err)
+		body = []byte("Error executing query!")
+	} else {
+		body, err = json.Marshal(results)
+	}
+	return
+}
+
 func helloWorld(ctx *web.Context) (body []byte, err error) {
-	body = []byte{'h', 'i'}
+	body = []byte("Hello world")
 	return
 }
 
 func serve() {
-	web.Get("/sql", helloSQL)
+	web.Post("/sql-query", handleQuery)
 	web.Get("/", helloWorld)
 	web.Get("/lite", helloSQLite)
 	web.Run("0.0.0.0:9999")

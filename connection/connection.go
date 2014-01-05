@@ -1,19 +1,37 @@
-package sqlite
+package connection
 
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 	"log"
 )
 
-func Connect(fileName string) (db *sql.DB, err error) {
-	db, err = sql.Open("sqlite3", fileName)
+
+func isDbAcceptable(dbType string) bool {
+  acceptableDBs := []string{"sqlite3", "postgres"}
+
+  for _, t := range(acceptableDBs) {
+    if t == dbType {
+      return true
+    }
+  }
+  return false
+}
+
+func Connect(dbType string, fileName string) (db *sql.DB, err error) {
+    if !isDbAcceptable(dbType) {
+      log.Fatal("Invalid DB type: ", dbType)
+    }
+
+	db, err = sql.Open(dbType, fileName)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return
 }
 
+// Borrowed from http://stackoverflow.com/a/14500756
 func Query(db *sql.DB, queryString string) (columns []string, rowset [][]string, err error) {
 	rows, err := db.Query(queryString)
 	if err != nil {
