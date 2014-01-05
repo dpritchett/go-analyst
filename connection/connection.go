@@ -31,7 +31,7 @@ func Connect(dbType string, fileName string) (db *sql.DB, err error) {
 	return
 }
 
-// Borrowed from http://stackoverflow.com/a/14500756
+// Borrowed from http://stackoverflow.com/a/14500756 [by user ANisus]
 func Query(db *sql.DB, queryString string) (columns []string, rowset [][]string, err error) {
 	rows, err := db.Query(queryString)
 	if err != nil {
