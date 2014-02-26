@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	//"github.com/nu7hatch/gouuid"
 	"github.com/dpritchett/go-analyst/connection"
 	"github.com/hoisie/web"
 	"github.com/joho/godotenv"
+	"html/template"
 	"log"
 )
 
@@ -73,6 +75,7 @@ func helloSQLite(ctx *web.Context) (body []byte, err error) {
 	return
 }
 
+
 func handleQuery(ctx *web.Context) (body []byte, err error) {
 	ctx.ContentType("json")
 	log.Print(ctx.Params)
@@ -88,8 +91,31 @@ func handleQuery(ctx *web.Context) (body []byte, err error) {
 	return
 }
 
-func helloWorld(ctx *web.Context) (body []byte, err error) {
-	body = []byte("Hello world")
+type HelloStruct struct {
+	Target string
+}
+
+func helloWorld(ctx *web.Context) (err error) {
+	t := template.Must(template.ParseFiles("index.html"))
+	w := &HelloStruct{Target: "World"}
+	t.Execute(ctx, w)
+	return
+}
+
+type Rowset struct {
+	Rows    [][]string
+}
+
+func helloTable(ctx *web.Context) (err error) {
+	t := template.Must(template.ParseFiles("rowset.html"))
+	t.Execute(ctx, []string{"able", "baker"})
+	return
+}
+
+func heavySQLite(ctx *web.Context) (err error) {
+    rows := hisqlite()
+	t := template.Must(template.ParseFiles("rowset.html"))
+	t.Execute(ctx, rows)
 	return
 }
 
@@ -97,6 +123,8 @@ func serve() {
 	web.Post("/sql-query", handleQuery)
 	web.Get("/", helloWorld)
 	web.Get("/lite", helloSQLite)
+	web.Get("/heavy", heavySQLite)
+	web.Get("/table", helloTable)
 	web.Run("0.0.0.0:9999")
 }
 
