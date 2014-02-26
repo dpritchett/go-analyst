@@ -10,6 +10,8 @@ import (
 	"log"
 )
 
+var templates = template.Must(template.ParseFiles("index.html", "rowset.html"))
+
 type Rowset struct {
 	Columns []string
 	Rows    [][]string
@@ -32,14 +34,15 @@ func hisqlite() *Rowset {
 	return &Rowset{Columns: columns, Rows: rows}
 }
 
-func report() (results [][]string, err error) {
-	queryString := "SELECT * FROM spree_states order by name asc"
+func report() (rs *Rowset, err error) {
+	querystring := "select * from spree_states order by name asc"
 
-	log.Printf("Executing [%s]", queryString)
-	return execQuery(queryString)
+	log.Printf("executing [%s]", querystring)
+    rs, err = execQuery(querystring)
+	return
 }
 
-func execQuery(queryString string) (results [][]string, err error) {
+func execQuery(queryString string) (rs *Rowset, err error) {
 	myEnv, err := godotenv.Read()
 	if err != nil {
 		return
@@ -58,11 +61,7 @@ func execQuery(queryString string) (results [][]string, err error) {
 		return
 	}
 
-	results = append(results, columns)
-
-	for _, row := range rows {
-		results = append(results, row)
-	}
+    rs = &Rowset{Columns: columns, Rows: rows}
 
 	return
 }
@@ -88,21 +87,14 @@ func handleQuery(ctx *web.Context) (body []byte, err error) {
 	return
 }
 
-type HelloStruct struct {
-	Target string
-}
-
 func helloWorld(ctx *web.Context) (err error) {
-	t := template.Must(template.ParseFiles("index.html"))
-	w := &HelloStruct{Target: "World"}
-	t.Execute(ctx, w)
+	templates.ExecuteTemplate(ctx, "index.html", nil)
 	return
 }
 
 func heavySQLite(ctx *web.Context) (err error) {
 	rs := hisqlite()
-	t := template.Must(template.ParseFiles("rowset.html"))
-	t.Execute(ctx, rs)
+	templates.ExecuteTemplate(ctx, "rowset.html", rs)
 	return
 }
 
