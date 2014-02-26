@@ -1,7 +1,18 @@
 <html>
+  <head>
+<head>
+<script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" media="all" rel="stylesheet" type="text/css">
+</head>
+  </head>
   <body>
     <table>
-      {{ range . }}
+      <tr>
+      {{ range .Columns }}
+        <th>{{.}}</th>
+      {{ end }}
+      </tr>
+      {{ range .Rows }}
       <tr>
         {{ range . }}
           <td>{{ . }}</td>

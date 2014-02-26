@@ -10,8 +10,12 @@ import (
 	"log"
 )
 
-func hisqlite() (results [][]string) {
+type Rowset struct {
+	Columns []string
+	Rows    [][]string
+}
 
+func hisqlite() *Rowset {
 	queryString := "SELECT * FROM Queries"
 
 	db, err := connection.Connect("sqlite3", "db/development.sqlite3.db")
@@ -25,13 +29,7 @@ func hisqlite() (results [][]string) {
 		log.Fatal(err)
 	}
 
-	results = append(results, columns)
-
-	for _, row := range rows {
-		results = append(results, row)
-	}
-
-	return
+	return &Rowset{Columns: columns, Rows: rows}
 }
 
 func report() (results [][]string, err error) {
@@ -75,7 +73,6 @@ func helloSQLite(ctx *web.Context) (body []byte, err error) {
 	return
 }
 
-
 func handleQuery(ctx *web.Context) (body []byte, err error) {
 	ctx.ContentType("json")
 	log.Print(ctx.Params)
@@ -102,20 +99,10 @@ func helloWorld(ctx *web.Context) (err error) {
 	return
 }
 
-type Rowset struct {
-	Rows    [][]string
-}
-
-func helloTable(ctx *web.Context) (err error) {
-	t := template.Must(template.ParseFiles("rowset.html"))
-	t.Execute(ctx, []string{"able", "baker"})
-	return
-}
-
 func heavySQLite(ctx *web.Context) (err error) {
-    rows := hisqlite()
+	rs := hisqlite()
 	t := template.Must(template.ParseFiles("rowset.html"))
-	t.Execute(ctx, rows)
+	t.Execute(ctx, rs)
 	return
 }
 
@@ -124,11 +111,10 @@ func serve() {
 	web.Get("/", helloWorld)
 	web.Get("/lite", helloSQLite)
 	web.Get("/heavy", heavySQLite)
-	web.Get("/table", helloTable)
+
 	web.Run("0.0.0.0:9999")
 }
 
 func main() {
-	//analyst.Hello()
 	serve()
 }
