@@ -17,6 +17,10 @@ type Rowset struct {
 	Rows    [][]string
 }
 
+func renderAsTable(rs *Rowset, ctx *web.Context) {
+	templates.ExecuteTemplate(ctx, "rowset.html", rs)
+}
+
 func hisqlite() *Rowset {
 	queryString := "SELECT * FROM Queries"
 
@@ -32,14 +36,6 @@ func hisqlite() *Rowset {
 	}
 
 	return &Rowset{Columns: columns, Rows: rows}
-}
-
-func report() (rs *Rowset, err error) {
-	querystring := "select * from spree_states order by name asc"
-
-	log.Printf("executing [%s]", querystring)
-    rs, err = execQuery(querystring)
-	return
 }
 
 func execQuery(queryString string) (rs *Rowset, err error) {
@@ -61,8 +57,14 @@ func execQuery(queryString string) (rs *Rowset, err error) {
 		return
 	}
 
-    rs = &Rowset{Columns: columns, Rows: rows}
+	rs = &Rowset{Columns: columns, Rows: rows}
 
+	return
+}
+
+func hiPg(ctx *web.Context) (err error) {
+	rs, err := execQuery("select * from spree_states")
+	renderAsTable(rs, ctx)
 	return
 }
 
@@ -92,10 +94,9 @@ func helloWorld(ctx *web.Context) (err error) {
 	return
 }
 
-func heavySQLite(ctx *web.Context) (err error) {
+func heavySQLite(ctx *web.Context) {
 	rs := hisqlite()
-	templates.ExecuteTemplate(ctx, "rowset.html", rs)
-	return
+	renderAsTable(rs, ctx)
 }
 
 func serve() {
@@ -103,6 +104,7 @@ func serve() {
 	web.Get("/", helloWorld)
 	web.Get("/lite", helloSQLite)
 	web.Get("/heavy", heavySQLite)
+	web.Get("/pg", hiPg)
 
 	web.Run("0.0.0.0:9999")
 }
