@@ -4,6 +4,10 @@ var Analyst = {
     console.log("Analyst loaded.");
   },
 
+  columnTemplate: "<tr><% _.each(cols, function(col){ %><th><%= col %></th> <% }); %></tr>",
+
+  rowTemplate:     "<tr><% _.each(row, function(cell){ %><td><%= cell %></td> <% }); %></tr>",
+
   bindQueryRunner: function() {
     $("#executeButton").on('click', Analyst.executeQuery);
   },
@@ -29,29 +33,18 @@ var Analyst = {
   },
 
   renderColumns: function () {
-    $tbl = $("#queryResults table")
+    $tbl = $("#queryResults table");
     $tbl.empty();
-    $tbl.append("<tr></tr>");
-    $.each(Analyst.columns(),
-        function(ix, el){
-          $("tr", $tbl).append("<th>" + el + "</th>");
-          console.log(el)
-        });
+    $tbl.append(_.template(Analyst.columnTemplate, { cols: Analyst.columns() }) );
   },
 
   renderRows: function() {
-    $.each(Analyst.rows(), function(ix, el){ console.log(el) });
-
-    $tbl = $("#queryResults table tbody")
-    $.each(Analyst.rows(),
-        function(ix, row){
-          $row = $tbl.append("<tr></tr>");
-          $.each(row,
-            function(ix, cell){
-              $row.append("<td></td>").text(cell);
-            });
+    $tbl = $("#queryResults table tbody");
+    _.each(Analyst.rows(),
+        function(row){
+          $tbl.append(_.template(Analyst.rowTemplate, { row: row }) );
         });
   }
 }
-  
+
 $(Analyst.initialize);
