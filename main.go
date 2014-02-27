@@ -10,11 +10,20 @@ import (
 	"log"
 )
 
-var templates = template.Must(template.ParseFiles("index.html", "rowset.html"))
+var templates = template.Must(template.ParseFiles(
+  "templates/index.html",
+  "templates/rowset.html",
+  "templates/builder.html"))
 
 type Rowset struct {
 	Columns []string
 	Rows    [][]string
+}
+
+type QueryResult struct {
+  Rowset *Rowset
+  Query  string
+  Error  error
 }
 
 func renderAsTable(rs *Rowset, ctx *web.Context) {
@@ -38,7 +47,7 @@ func hisqlite() *Rowset {
 	return &Rowset{Columns: columns, Rows: rows}
 }
 
-func execQuery(queryString string) (rs *Rowset, err error) {
+func execQuery(queryString string) (results *QueryResult) {
 	myEnv, err := godotenv.Read()
 	if err != nil {
 		return
@@ -51,20 +60,23 @@ func execQuery(queryString string) (rs *Rowset, err error) {
 		return
 	}
 
+    results = &QueryResult{Query: queryString}
+
 	columns, rows, err := connection.Query(db, queryString)
 
 	if err != nil {
+        results.Error = err
 		return
 	}
 
-	rs = &Rowset{Columns: columns, Rows: rows}
+	results.Rowset = &Rowset{Columns: columns, Rows: rows}
 
 	return
 }
 
 func hiPg(ctx *web.Context) (err error) {
-	rs, err := execQuery("select * from spree_states")
-	renderAsTable(rs, ctx)
+	result := execQuery("select * from spree_states")
+	renderAsTable(result.Rowset, ctx)
 	return
 }
 
@@ -75,16 +87,15 @@ func helloSQLite(ctx *web.Context) (body []byte, err error) {
 }
 
 func handleQuery(ctx *web.Context) (body []byte, err error) {
-	ctx.ContentType("json")
 	log.Print(ctx.Params)
 
-	results, err := execQuery(ctx.Params["query"])
+	results := execQuery(ctx.Params["query"])
 
 	if err != nil {
 		log.Printf("Error: %v", err)
 		body = []byte("Error executing query!")
 	} else {
-		body, err = json.Marshal(results)
+      body, err = json.Marshal(results)
 	}
 	return
 }
@@ -99,9 +110,13 @@ func heavySQLite(ctx *web.Context) {
 	renderAsTable(rs, ctx)
 }
 
+func buildQuery(ctx *web.Context) {
+  templates.ExecuteTemplate(ctx, "builder.html", &QueryResult{Query: "select 1 as one;"})
+}
+
 func serve() {
 	web.Post("/sql-query", handleQuery)
-	web.Get("/", helloWorld)
+	web.Get("/", buildQuery)
 	web.Get("/lite", helloSQLite)
 	web.Get("/heavy", heavySQLite)
 	web.Get("/pg", hiPg)

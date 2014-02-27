@@ -1,0 +1,31 @@
+<html>
+  <head>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" media="all" rel="stylesheet" type="text/css">
+
+    <script type="text/javascript" src="/application.js"></script>
+  </head>
+  <body>
+    <div id="inputForm">
+      <textarea id="queryString">{{ .Query }}</textarea>
+      <button id="executeButton">Execute</button>
+    </div>
+    <div id="queryResults">
+      <table>
+        <tr>
+          {{ range .Rowset.Columns }}
+          <th>{{.}}</th>
+          {{ end }}
+        </tr>
+        {{ range .Rowset.Rows }}
+        <tr>
+          {{ range . }}
+          <td>{{ . }}</td>
+          {{ end }}
+        </tr>
+        {{ end }}
+      </table>
+    </div>
+    </body>
+</html>
